@@ -1,22 +1,7 @@
 load_addr = 0x80000000 + 1m;
-
-/**
- * reserves this much space at the top of ram for the initial stack.
- */
 kernel_stack_size = 512k;
 
 ENTRY(_start)
-
-/*
-.debug_info
-.debug_abbrev
-.debug_aranges
-.debug_line
-.debug_str
-.comment
-.debug_frame
-.riscv.attributes
-*/
 
 SECTIONS
 {

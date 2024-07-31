@@ -9,6 +9,7 @@ void zero_bss() {
 	}
 }
 
+int b;
 int c = 123;
 const int a_start;
 const int b_start = 1;
@@ -16,7 +17,7 @@ int main() {
 	zero_bss();
 
 	int a = a_start;
-	int b = b_start;
+	b = b_start;
 	while (1) {
 		c = a + b;
 		a = b;
