@@ -1,13 +1,12 @@
-load_addr = 0x80000000 + 1m;
+ram_start = 0x80000000;
+load_addr = ram_start + 1m;
 kernel_stack_size = 512k;
 
 ENTRY(_start)
 
-SECTIONS
-{
+SECTIONS {
+	PROVIDE(__global_pointer$ = ram_start + 2048m);
 	. = load_addr;
-	/*PROVIDE( __global_pointer$ = . + 2048m);*/
-	PROVIDE( __global_pointer$ = .);
 
 	.text ALIGN(4k): {
 		*(.text)
