@@ -2,7 +2,7 @@ AS=riscv64-unknown-elf-as
 CC=riscv64-unknown-elf-gcc
 LD=riscv64-unknown-elf-ld
 
-CFLAGS=-g -O1 -mcmodel=medany -ffreestanding
+CFLAGS=-g -O0 -mcmodel=medany -ffreestanding
 LDFLAGS=-nostartfiles -nodefaultlibs -nostdlib -Tlinker.ld
 
 kernel: start.o kernel.o sbi.o
