@@ -5,11 +5,11 @@ LD=riscv64-unknown-elf-ld
 CFLAGS=-g -O0 -mcmodel=medany -ffreestanding
 LDFLAGS=-nostartfiles -nodefaultlibs -nostdlib -Tlinker.ld
 
-kernel: start.o kernel.o sbi.o
+kernel: start.o kernel.o sbi.o qemu.o fb.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 run: kernel
-	qemu-system-riscv64 --machine virt -m 128m -serial stdio -gdb tcp::1234 -kernel kernel
+	qemu-system-riscv64 -device ramfb --machine virt -m 128m -serial stdio -gdb tcp::1234 -kernel kernel
 
 clean:
 	rm -f kernel *.o

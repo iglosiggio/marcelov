@@ -1,5 +1,9 @@
 #include <stdint.h>
+
+#include "fb.h"
+#include "qemu.h"
 #include "sbi.h"
+#include "utils.h"
 
 void zero_bss() {
 	extern uint8_t kernel_bss_start, kernel_bss_end;
@@ -8,18 +12,6 @@ void zero_bss() {
 	while (c != &kernel_bss_end) {
 		*c++ = 0;
 	}
-}
-
-long print(const char* str) {
-	long len = 0;
-	while (*str) {
-		long res = sbi_console_putchar(*str++);
-		if (res != 0) {
-			return res;
-		}
-		len++;
-	}
-	return len;
 }
 
 long read_until(char delimiter, char* dst, long dst_size, long* written_size) {
@@ -52,13 +44,58 @@ int main() {
 
 	struct sbiret dbcn_support = sbi_probe_extension(0x4442434E);
 
+	char qemu[5] = {};
+	char qemu_cfg[9] = {};
+	fw_cfg_read_signature(qemu, qemu_cfg);
+	if (str_eq(qemu, "QEMU") && str_eq(qemu_cfg, "QEMU CFG")) {
+		print("Hola QEMU!\n");
+	}
+
+	{
+		uint32_t count;
+		struct {
+			uint32_t size;
+			uint16_t select;
+			uint16_t reserved;
+			char name[56];
+		} file;
+
+		if (fw_cfg_dma_read_from(FW_CFG_FILE_DIR, &count, sizeof(count))) {
+			print("No pude leer el count :(\n");
+			sbi_shutdown();
+		}
+		count = bswap4(count);
+
+		print("Listando los dispositivos de fw_cfg:\n");
+		for (int i = 0; i < count; i++) {
+			if (fw_cfg_dma_read(&file, sizeof(file))) {
+				print("No pude leer el file :(\n");
+				sbi_shutdown();
+			}
+			print("  - ");
+			print(file.name);
+			print(" (size = ");
+			print_hex(bswap4(file.size));
+			print(", select = ");
+			print_hex(bswap2(file.select));
+			print(")\n");
+		}
+	}
+
+	if (fb_init((void*) 0x80200000, 640, 480)) {
+		print("Hubo un problema inicializando la pantalla!\n");
+	}
+
+	fb_clear(170, 69, 69);
+	fb_print("abcdef\na\n b\n  c\n   d\n    e\n     f", 40, 40);
+
 	print("Hola mundo!!\n");
 	print("¿Cómo te llamás?\n");
 	char nombre[64] = {};
 	int res = read_until('\n', nombre, sizeof(nombre) - 1, 0x0);
 	if (res < 0) {
 		print("No pude leer de la consola :(\n");
-		sbi_shutdown();
+		//sbi_shutdown();
 	} else {
 		print("Hola ");
 		print(nombre);
