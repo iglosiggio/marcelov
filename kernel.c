@@ -90,26 +90,6 @@ int main() {
 	fb_print("Hola ~~Organizacion del Computador 2~~!\nHola Arquitectura y Organizacion del Computador!", 40, 40);
 	fb_print_charmap(100, 100);
 
-	print("Hola mundo!!\n");
-	print("¿Cómo te llamás?\n");
-	char nombre[64] = {};
-	int res = read_until('\n', nombre, sizeof(nombre) - 1, 0x0);
-	if (res < 0) {
-		print("No pude leer de la consola :(\n");
-		//sbi_shutdown();
-	} else {
-		print("Hola ");
-		print(nombre);
-		print("!!\n");
-	}
-
-
-	int a = a_start;
-	b = b_start;
-	while (1) {
-		c = a + b;
-		a = b;
-		b = c;
-	}
+	while (1) asm volatile("");
 	return 0;
 }
