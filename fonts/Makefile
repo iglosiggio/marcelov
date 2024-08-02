@@ -1,9 +1,11 @@
-all: monaco.inc
+all: monaco.inc cream12.inc
 
 clean:
-	rm -f monaco.inc
+	rm -f monaco.inc cream12.inc
 
-monaco.inc: monaco.font
+.data.inc:
 	../utils/to_data_file $< $@
+
+.SUFFIXES: .data .inc
 
 .PHONY: all clean

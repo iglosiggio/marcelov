@@ -71,92 +71,44 @@ void fb_clear(uint8_t r, uint8_t g, uint8_t b) {
 	}
 }
 
-//typedef uint8_t char_bitmap[8];
-//static
-//char_bitmap font[256] = {
-//	['a'] = {
-//		0b00000000,
-//		0b00011110,
-//		0b00000001,
-//		0b00000001,
-//		0b00011111,
-//		0b00100001,
-//		0b00100001,
-//		0b00011110
-//	},
-//	['b'] = {
-//		0b00000000,
-//		0b00100000,
-//		0b00100000,
-//		0b00111110,
-//		0b00100001,
-//		0b00100001,
-//		0b00100001,
-//		0b00011110
-//	},
-//	['c'] = {
-//		0b00000000,
-//		0b00011110,
-//		0b00100000,
-//		0b00100000,
-//		0b00100000,
-//		0b00100000,
-//		0b00100000,
-//		0b00011110
-//	},
-//	['d'] = {
-//		0b00000000,
-//		0b00000001,
-//		0b00000001,
-//		0b00011111,
-//		0b00100001,
-//		0b00100001,
-//		0b00100001,
-//		0b00011110
-//	},
-//	['e'] = {
-//		0b00000000,
-//		0b00011110,
-//		0b00100001,
-//		0b00100001,
-//		0b00111111,
-//		0b00100000,
-//		0b00100000,
-//		0b00011110
-//	},
-//	['f'] = {
-//		0b00000000,
-//		0b00001110,
-//		0b00010001,
-//		0b00010000,
-//		0b00111110,
-//		0b00010000,
-//		0b00010000,
-//		0b00010000
-//	},
-//};
+//#include "fonts/monaco.inc"
+//#define font monaco
+//#define FIRST_CHAR 32
+//#define CHAR_WIDTH(c) 8
+//#define CHAR_HEIGHT 16
+//#define CHAR_SIZE 16
+//#define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
 
-#include "fonts/monaco.inc"
-#define font monaco
+#include "fonts/cream12.inc"
+#define font cream12
 #define FIRST_CHAR 32
+#define CHAR_WIDTH(c) cream12_width[c]
 #define CHAR_HEIGHT 16
-#define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_HEIGHT)
+#define CHAR_SIZE 32
+#define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
+
 
 static
 void fb_print_char(char c, uint32_t start_x, uint32_t start_y) {
 	rgb_t px = { .R = 0, .G = 0, .B = 0 };
 
-	if (c < FIRST_CHAR || LAST_CHAR < c) {
+	if (c < FIRST_CHAR || LAST_CHAR <= c) {
 		c = '?';
 	}
-	c -= FIRST_CHAR;
 
 	for (uint32_t y = 0; y < CHAR_HEIGHT; y++) {
-		for (uint32_t x = 0; x < 8; x++) {
+		for (uint32_t x = 0; x < CHAR_WIDTH(c); x++) {
+			// Índice al principio de la definición de este char.
+			int c_start = (c - FIRST_CHAR) * CHAR_SIZE;
+			// Para chars que ocupan más de 8 px de ancho.
+			// Offset del principio del char al bloque de 8px a usar.
+			int c_offset = CHAR_HEIGHT * (x / 8);
+			// Cuál offset x dentro de bloque de 8px actual.
+			int c_x = x % 8;
 			if (fb.width <= start_x + x) {
 				break;
 			}
-			if (font[c * CHAR_HEIGHT + y] & (0x80 >> x)) {
+			if (font[c_start + c_offset + y] & (0x80 >> c_x)) {
 				fb.canvas[(start_y + y) * fb.width + (start_x + x)] = px;
 			}
 		}
@@ -176,7 +128,7 @@ void fb_print(const char* str, uint32_t start_x, uint32_t start_y) {
 			x = start_x;
 		} else {
 			fb_print_char(c, x, y);
-			x += 8;
+			x += CHAR_WIDTH(c);
 		}
 		str++;
 	}
@@ -191,6 +143,8 @@ void fb_print_charmap(uint32_t start_x, uint32_t start_y) {
 			x = start_x;
 		}
 		fb_print_char(i, x, y);
-		x += 8;
+		x += i < FIRST_CHAR || LAST_CHAR <= i
+			? CHAR_WIDTH('?')
+			: CHAR_WIDTH(i);
 	}
 }

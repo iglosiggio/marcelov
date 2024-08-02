@@ -18,10 +18,10 @@ run: kernel
 kernel: start.o kernel.o sbi.o qemu.o fb.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
-fb.o: fb.c monaco.inc
+fb.o: fb.c fonts/cream12.inc
 
-monaco.inc: utils
-	$(MAKE) -C fonts $@
+fonts/cream12.inc: utils
+	$(MAKE) -C fonts cream12.inc
 
 utils:
 	$(MAKE) -C utils all
