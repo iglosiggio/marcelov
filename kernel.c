@@ -87,7 +87,8 @@ int main() {
 	}
 
 	fb_clear(170, 69, 69);
-	fb_print("abcdef\na\n b\n  c\n   d\n    e\n     f", 40, 40);
+	fb_print("Hola ~~Organizacion del Computador 2~~!\nHola Arquitectura y Organizacion del Computador!", 40, 40);
+	fb_print_charmap(100, 100);
 
 	print("Hola mundo!!\n");
 	print("¿Cómo te llamás?\n");
