@@ -35,6 +35,9 @@ const int b_start = 1;
 int main() {
 	zero_bss();
 
+	void test_enumerate();
+	test_enumerate();
+
 	struct sbiret spec_version = sbi_get_spec_version();
 	struct sbiret impl_id = sbi_get_impl_id();
 	struct sbiret impl_ver = sbi_get_impl_version();
