@@ -60,13 +60,20 @@ uint64_t print(const char* str) {
 static
 uint64_t print_hex(uint64_t v) {
 	static const char* table = "0123456789ABCDEF";
-	char buf[19] = { [17] = '0' };
-	char* s = buf + 18;
-	while (v != 0) {
-		*--s = table[v & 0xF];
-		v >>= 4;
+	char buf[19];
+	char* s;
+
+	if (v == 0) {
+		s = "0x0";
+	} else {
+		s = buf + 18;
+		while (v != 0) {
+			*--s = table[v & 0xF];
+			v >>= 4;
+		}
+		*--s = 'x';
+		*--s = '0';
 	}
-	*--s = 'x';
-	*--s = '0';
+
 	return print(s);
 }

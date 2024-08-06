@@ -13,7 +13,7 @@ bool try_get_label(FILE* f, char* buf, size_t bufsiz, int* written) {
 	}
 
 	*written = 0;
-	while(*written < bufsiz - 1) {
+	while(*written < bufsiz) {
 		c = fgetc(f);
 		if (c == EOF || isspace(c)) return *written != 0;
 
@@ -32,7 +32,7 @@ bool try_get_hex(FILE* f, char* buf, size_t bufsiz, int* written) {
 	}
 
 	*written = 0;
-	while(*written < bufsiz - 1) {
+	while(*written < bufsiz) {
 		c = fgetc(f);
 		if (c == EOF || isspace(c)) return *written != 0;
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 			fprintf(stderr, "FATAL: Expected label but got something else\n");
 			exit(1);
 		}
-		fprintf(to, "uint8_t %*s[] = {\n", len, token);
+		fprintf(to, "uint8_t %.*s[] = {\n", len, token);
 
 		const int bytes_per_line = 16;
 		int bytes_current_line = 0;
