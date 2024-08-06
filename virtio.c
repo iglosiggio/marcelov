@@ -73,6 +73,44 @@ struct virtio_device {
 	char config[];
 };
 
+enum virtio_input_config_select {
+	VIRTIO_INPUT_CFG_UNSET      = 0x00,
+	VIRTIO_INPUT_CFG_ID_NAME    = 0x01,
+	VIRTIO_INPUT_CFG_ID_SERIAL  = 0x02,
+	VIRTIO_INPUT_CFG_ID_DEVIDS  = 0x03,
+	VIRTIO_INPUT_CFG_PROP_BITS  = 0x10,
+	VIRTIO_INPUT_CFG_EV_BITS    = 0x11,
+	VIRTIO_INPUT_CFG_ABS_INFO   = 0x12
+};
+
+struct virtio_input_absinfo {
+	uint32_t min;
+	uint32_t max;
+	uint32_t fuzz;
+	uint32_t flat;
+	uint32_t res;
+};
+
+struct virtio_input_devids {
+	uint16_t bustype;
+	uint16_t vendor;
+	uint16_t product;
+	uint16_t verstion;
+};
+
+struct virtio_config_input {
+	uint8_t select;
+	uint8_t subsel;
+	uint8_t size;
+	uint8_t reserved[5];
+	union {
+		char string[128];
+		uint8_t bitmap[128];
+		struct virtio_input_absinfo abs;
+		struct virtio_input_devids ids;
+	};
+};
+
 #define P(field) print("Offset of "#field": "); print_hex(offsetof(struct virtio_device, field)); print("\n")
 
 void test_enumerate() {
@@ -103,8 +141,8 @@ void test_enumerate() {
 	P(config);
 
 	struct virtio_device* devices[] = {
-		(void*) 0x10008000,
-		(void*) 0x10007000,
+		(void*) 0x10008000, /* keyboard */
+		(void*) 0x10007000, /* mouse */
 		//(void*) 0x10006000,
 		//(void*) 0x10005000,
 		//(void*) 0x10004000,
@@ -139,6 +177,47 @@ void test_enumerate() {
 
 		print("Vendor ID: ");
 		print_hex(devices[i]->vendor_id);
-		print("\n\n");
+		print("\n");
+
+		if (devices[i]->device_id == 0x12) {
+			struct virtio_config_input* config = (void*) devices[i]->config;
+
+			config->subsel = 0;
+			config->select = VIRTIO_INPUT_CFG_ID_NAME;
+			if (config->size != 0) {
+				print("Name: ");
+				print(config->string);
+				print("\n");
+			}
+
+			config->subsel = 0;
+			config->select = VIRTIO_INPUT_CFG_ID_SERIAL;
+			if (config->size != 0) {
+				print("Serial: ");
+				for (int i = 0; i < config->size; i++) {
+					if (i != 0) {
+						print(" ");
+					}
+					print_hex(config->string[i]);
+				}
+				print("\n");
+			}
+
+			config->subsel = 0;
+			config->select = VIRTIO_INPUT_CFG_ID_DEVIDS;
+			if (config->size != 0) {
+				print("Device IDs:");
+				print("\n - Bus type: ");
+				print_hex(config->ids.bustype);
+				print("\n - Vendor: ");
+				print_hex(config->ids.vendor);
+				print("\n - Product: ");
+				print_hex(config->ids.product);
+				print("\n - Version: ");
+				print_hex(config->ids.bustype);
+				print("\n");
+			}
+		}
+		print("\n");
 	}
 }
