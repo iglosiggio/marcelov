@@ -3,7 +3,13 @@ CC=riscv64-unknown-elf-gcc
 LD=riscv64-unknown-elf-ld
 
 CFLAGS=-g -O0 -mcmodel=medany -ffreestanding
-LDFLAGS=-nostartfiles -nodefaultlibs -nostdlib -Tlinker.ld
+LDFLAGS=-nostdlib -Tlinker.ld
+
+QEMU = qemu-system-riscv64
+
+GDB = riscv64-elf-gdb
+
+FONT=cream12
 
 all: kernel
 
@@ -13,15 +19,18 @@ clean:
 	$(MAKE) -C utils clean
 
 run: kernel
-	qemu-system-riscv64 -device ramfb -global virtio-mmio.force-legacy=false -device virtio-keyboard-device -device virtio-mouse-device --machine virt -m 128m -serial stdio -gdb tcp::1234 -kernel kernel
+	$(QEMU) -device ramfb --machine virt -m 128m -serial stdio -gdb tcp::1234 -kernel kernel #-S
 
-kernel: start.o kernel.o sbi.o qemu.o fb.o virtio.o
+attach:
+	$(GDB) kernel -ex "target remote localhost:1234"
+
+kernel: start.o kernel.o sbi.o qemu.o fb.o virtio.o kmi.o interrupts.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
-fb.o: fb.c fonts/cream12.inc
+fb.o: fb.c fonts/$(FONT).inc
 
-fonts/cream12.inc: utils
-	$(MAKE) -C fonts cream12.inc
+fonts/$(FONT).inc: utils
+	$(MAKE) -C fonts $(FONT).inc
 
 utils:
 	$(MAKE) -C utils all

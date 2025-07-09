@@ -71,6 +71,15 @@ void fb_clear(uint8_t r, uint8_t g, uint8_t b) {
 	}
 }
 
+void fb_fill_rect(rgb_t col, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+	for (int i = y; i < fb.height && i < y + height; i++) {
+		int row_offset = i * fb.width;
+		for (int j = x; j < fb.width && j < x + width; j++) {
+			fb.canvas[row_offset + j] = col;
+		}
+	}
+}
+
 //#include "fonts/monaco.inc"
 //#define font monaco
 //#define FIRST_CHAR 32
@@ -147,4 +156,17 @@ void fb_print_charmap(uint32_t start_x, uint32_t start_y) {
 			? CHAR_WIDTH('?')
 			: CHAR_WIDTH(i);
 	}
+}
+
+void fb_print_dec(uint32_t n, uint32_t start_x, uint32_t start_y) {
+	constexpr char lookup[] = "0123456789";
+	char str[33];
+	int i = sizeof(str) - 1;
+	str[i] = 0;
+	do {
+		i--;
+		str[i] = lookup[n%10];
+		n /= 10;
+	} while (n != 0 && 0 <= i);
+	fb_print(str + i, start_x, start_y);
 }

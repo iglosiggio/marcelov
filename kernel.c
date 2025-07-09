@@ -4,6 +4,9 @@
 #include "qemu.h"
 #include "sbi.h"
 #include "utils.h"
+#include "kmi.h"
+#include "interrupts.h"
+#include "encoding.h"
 
 void zero_bss() {
 	extern uint8_t kernel_bss_start, kernel_bss_end;
@@ -92,6 +95,39 @@ int main() {
 	fb_clear(170, 69, 69);
 	fb_print("Hola ~~Organizacion del Computador 2~~!\nHola Arquitectura y Organizacion del Computador!", 40, 40);
 	fb_print_charmap(100, 100);
+
+	fb_print_dec(interrupts_external_query(1, 11), 300, 310);
+	fb_print_dec(interrupts_external_query(1, 12), 300, 320);
+	fb_print_dec(interrupts_external_query(1, 13), 300, 330);
+	interrupts_external_set(1, 11, true);
+	interrupts_external_set(1, 12, true);
+	interrupts_external_set(1, 13, true);
+	fb_print_dec(interrupts_external_query(1, 11), 310, 310);
+	fb_print_dec(interrupts_external_query(1, 12), 310, 320);
+	fb_print_dec(interrupts_external_query(1, 13), 310, 330);
+
+	kmi_enable_keyboard();
+	kmi_enable_mouse();
+	interrupts_enable();
+
+	int i = 0;
+	while (1) {
+		fb_fill_rect((rgb_t) { 69, 170, 69 }, 10, 10, 70, 150);
+		fb_print_dec(keyboard->cr,   10, 10);
+		fb_print_dec(keyboard->stat, 10, 20);
+		fb_print_dec(keyboard->data, 10, 30);
+		fb_print_dec(keyboard->clk,  10, 40);
+		fb_print_dec(keyboard->ir,   10, 50);
+
+		fb_print_dec(mouse->cr,   10,  70);
+		fb_print_dec(mouse->stat, 10,  80);
+		fb_print_dec(mouse->data, 10,  90);
+		fb_print_dec(mouse->clk,  10, 100);
+		fb_print_dec(mouse->ir,   10, 110);
+
+		fb_print_dec(i++,   10, 140);
+		for (int j = 0; j < 1<<24; j++) asm volatile("");
+	}
 
 	while (1) asm volatile("");
 	return 0;
