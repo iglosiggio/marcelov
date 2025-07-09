@@ -8,6 +8,97 @@
 #include "interrupts.h"
 #include "encoding.h"
 
+void handle_keyboard(void) {
+	// QEMU makes data immediately available
+	uint8_t data = keyboard->data;
+
+	if (data == 0xFA) {
+		print("Received ACK from keyboard\n");
+		return;
+	}
+	print("Received "); print_sdec(data); print(" from the keyboard\n");
+}
+
+enum {
+	MOUSE_WAIT_BYTE0,
+	MOUSE_WAIT_BYTE1,
+	MOUSE_WAIT_BYTE2,
+} mouse_state = MOUSE_WAIT_BYTE0;
+uint8_t mouse_byte0;
+uint8_t mouse_byte1;
+uint8_t mouse_byte2;
+int32_t mouse_x;
+int32_t mouse_y;
+bool mouse_left;
+bool mouse_mid;
+bool mouse_right;
+
+void mouse_process_event(void) {
+	bool left  = !!(mouse_byte0 & 1);
+	bool right = !!(mouse_byte0 & 2);
+	bool mid   = !!(mouse_byte0 & 4);
+
+	int32_t x_offset_base = !!(mouse_byte0 & 16) ? 0x100 : 0;
+	int32_t x_offset = ((int32_t) mouse_byte1) - x_offset_base;
+
+	int32_t y_offset_base = !!(mouse_byte0 & 32) ? 0x100 : 0;
+	int32_t y_offset = ((int32_t) mouse_byte2) - y_offset_base;
+
+	// FIXME: Parece que tengo mal el signo en los ejes??
+	mouse_x -= x_offset;
+	if (mouse_x < 0)  mouse_x = 0;
+	if (fb.width <= mouse_x) mouse_x = fb.width - 1;
+
+	mouse_y += y_offset;
+	if (mouse_y < 0)  mouse_y = 0;
+	if (fb.height <= mouse_y) mouse_y = fb.height - 1;
+
+	if (mouse_left  != left)  print(left  ? "Left button down\n"   : "Left button up\n");
+	if (mouse_mid   != mid)   print(mid   ? "Middle button down\n" : "Middle button up\n");
+	if (mouse_right != right) print(right ? "Right button down\n"  : "Right button up\n");
+	mouse_left = left;
+	mouse_right = right;
+	mouse_mid = mid;
+
+	if (mouse_left) {
+		int i = mouse_y * fb.width + mouse_x;
+		fb.canvas[i] = (rgb_t) { mouse_x, mouse_y, 0 };
+	}
+	//print_sdec(mouse_x); print(" "); print_sdec(mouse_y); print("\n");
+
+	// Log mouse events
+	//print_hex(mouse_byte0); print(" "); print_hex(mouse_byte1); print(" "); print_hex(mouse_byte2); print(" ");
+	//if (left)  print("L"); else print(" ");
+	//if (mid)   print("M"); else print(" ");
+	//if (right) print("R"); else print(" ");
+	//print("\n  X: ");
+	//print_sdec(x_offset);
+	//print("\n  Y: ");
+	//print_sdec(y_offset);
+	//print("\n");
+}
+
+void handle_mouse(void) {
+	// QEMU makes data immediately available
+	uint8_t data = mouse->data;
+	if (mouse_state == MOUSE_WAIT_BYTE0 && data == 0xFA) {
+		print("Received ACK from mouse\n");
+		return;
+	}
+
+	if (mouse_state == MOUSE_WAIT_BYTE0) {
+		mouse_byte0 = data;
+		mouse_state = MOUSE_WAIT_BYTE1;
+	} else if (mouse_state == MOUSE_WAIT_BYTE1) {
+		mouse_byte1 = data;
+		mouse_state = MOUSE_WAIT_BYTE2;
+	} else if (mouse_state == MOUSE_WAIT_BYTE2) {
+		mouse_byte2 = data;
+		mouse_state = MOUSE_WAIT_BYTE0;
+		mouse_process_event();
+	}
+}
+
 void zero_bss() {
 	extern uint8_t kernel_bss_start, kernel_bss_end;
 
@@ -96,18 +187,12 @@ int main() {
 	fb_print("Hola ~~Organizacion del Computador 2~~!\nHola Arquitectura y Organizacion del Computador!", 40, 40);
 	fb_print_charmap(100, 100);
 
-	fb_print_dec(interrupts_external_query(1, 11), 300, 310);
-	fb_print_dec(interrupts_external_query(1, 12), 300, 320);
-	fb_print_dec(interrupts_external_query(1, 13), 300, 330);
-	interrupts_external_set(1, 11, true);
-	interrupts_external_set(1, 12, true);
-	interrupts_external_set(1, 13, true);
-	fb_print_dec(interrupts_external_query(1, 11), 310, 310);
-	fb_print_dec(interrupts_external_query(1, 12), 310, 320);
-	fb_print_dec(interrupts_external_query(1, 13), 310, 330);
+	interrupts_external_enable(1, 12, handle_keyboard);
+	interrupts_external_enable(1, 13, handle_mouse);
 
 	kmi_enable_keyboard();
 	kmi_enable_mouse();
+
 	interrupts_enable();
 
 	int i = 0;

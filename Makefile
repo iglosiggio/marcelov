@@ -2,8 +2,8 @@ AS=riscv64-unknown-elf-as
 CC=riscv64-unknown-elf-gcc
 LD=riscv64-unknown-elf-ld
 
-CFLAGS=-g -O0 -mcmodel=medany -ffreestanding
-LDFLAGS=-nostdlib -Tlinker.ld
+CFLAGS = -std=gnu2x -g -O0 -mcmodel=medany -ffreestanding
+LDFLAGS = -nostdlib -Tlinker.ld
 
 QEMU = qemu-system-riscv64
 

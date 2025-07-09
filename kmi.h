@@ -63,7 +63,6 @@ constexpr struct struct_PL050_STATUS PL050_STATUS = { 1, 2, 4, 8, 16, 32, 64 };
 static volatile pl050_registers* const keyboard = (void*) 0x102000;
 static volatile pl050_registers* const mouse = (void*) 0x103000;
 
-void kmi_init(volatile pl050_registers* device);
 void kmi_send(volatile pl050_registers* device, uint8_t command);
 void kmi_enable_mouse();
 void kmi_enable_keyboard();

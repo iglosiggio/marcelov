@@ -77,3 +77,26 @@ uint64_t print_hex(uint64_t v) {
 
 	return print(s);
 }
+
+
+static
+uint64_t print_sdec(int64_t v) {
+	static const char table[] = "0123456789";
+	char buf[22];
+	char* s = buf + sizeof(buf) - 1;
+	bool is_negative = v < 0;
+
+	if (is_negative) v = -v;
+
+	*s = 0;
+	do {
+		*--s = table[v % 10];
+		v /= 10;
+	} while (v != 0);
+
+	if (is_negative) {
+		*--s = '-';
+	}
+
+	return print(s);
+}
