@@ -4,6 +4,7 @@
 #include "qemu.h"
 #include "sbi.h"
 #include "utils.h"
+#include "virtio.h"
 
 void zero_bss() {
 	extern uint8_t kernel_bss_start, kernel_bss_end;
@@ -35,8 +36,10 @@ const int b_start = 1;
 int main() {
 	zero_bss();
 
-	void test_enumerate();
-	test_enumerate();
+	print("\n### Keyboard\n");
+	virtio_device_dump(virtio_keyboard);
+	print("\n### Mouse\n");
+	virtio_device_dump(virtio_mouse);
 
 	struct sbiret spec_version = sbi_get_spec_version();
 	struct sbiret impl_id = sbi_get_impl_id();

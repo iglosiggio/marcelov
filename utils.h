@@ -19,6 +19,14 @@ bool str_eq(const char* a, const char* b) {
 }
 
 static
+void memset(void* mem, uint64_t length, unsigned char byte) {
+	unsigned char* c = (unsigned char*) mem;
+	for (int i = 0; i < length; i++) {
+		c[i] = byte;
+	}
+}
+
+static
 uint64_t bswap8(uint64_t in) {
 	return ((in >>  0) & 0xFF) << 56
 	     | ((in >>  8) & 0xFF) << 48
