@@ -80,14 +80,15 @@ void fb_fill_rect(rgb_t col, uint32_t x, uint32_t y, uint32_t width, uint32_t he
 	}
 }
 
-//#include "fonts/monaco.inc"
-//#define font monaco
-//#define FIRST_CHAR 32
-//#define CHAR_WIDTH(c) 8
-//#define CHAR_HEIGHT 16
-//#define CHAR_SIZE 16
-//#define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
-
+#if defined(FONT_monaco)
+#include "fonts/monaco.inc"
+#define font monaco
+#define FIRST_CHAR 32
+#define CHAR_WIDTH(c) 8
+#define CHAR_HEIGHT 16
+#define CHAR_SIZE 16
+#define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
+#elif defined(FONT_cream12)
 #include "fonts/cream12.inc"
 #define font cream12
 #define FIRST_CHAR 32
@@ -95,6 +96,9 @@ void fb_fill_rect(rgb_t col, uint32_t x, uint32_t y, uint32_t width, uint32_t he
 #define CHAR_HEIGHT 16
 #define CHAR_SIZE 32
 #define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
+#else
+#error No supported font was defined!
+#endif
 
 void fb_print_char(char c, uint32_t start_x, uint32_t start_y) {
 	rgb_t px = { .R = 0, .G = 0, .B = 0 };

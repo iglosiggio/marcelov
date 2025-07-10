@@ -9,7 +9,8 @@ QEMU = qemu-system-riscv64
 
 GDB = riscv64-elf-gdb
 
-FONT=cream12
+FONT = cream12
+#FONT = monaco
 
 all: kernel
 
@@ -28,6 +29,7 @@ kernel: start.o kernel.o sbi.o qemu.o fb.o virtio.o kmi.o interrupts.o keyboard.
 	$(LD) $(LDFLAGS) $^ -o $@
 
 fb.o: fb.c fonts/$(FONT).inc
+	$(CC) $(CFLAGS) -DFONT_$(FONT) -c $< -o $@
 
 fonts/$(FONT).inc: utils
 	$(MAKE) -C fonts $(FONT).inc
