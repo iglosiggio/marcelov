@@ -84,7 +84,7 @@ void fb_fill_rect(rgb_t col, uint32_t x, uint32_t y, uint32_t width, uint32_t he
 #include "fonts/monaco.inc"
 #define font monaco
 #define FIRST_CHAR 32
-#define CHAR_WIDTH(c) 8
+#define CHAR_WIDTH(c) 7
 #define CHAR_HEIGHT 16
 #define CHAR_SIZE 16
 #define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
