@@ -192,8 +192,7 @@ void scrollbuffer_scroll_up(void) {
 	scrollbuffer_top_line = (scrollbuffer_top_line + MAX_LINES_REMEMBERED - 1) % MAX_LINES_REMEMBERED;
 }
 
-static
-void add_new_line(void) {
+void scrollback_new_line(void) {
 	curr_line = (curr_line + 1) % MAX_LINES_REMEMBERED;
 	curr_column = 0;
 	if (curr_line == scrollbuffer_start) {
@@ -210,12 +209,11 @@ void add_new_line(void) {
 	}
 }
 
-static
-void putchar(char c) {
+void scrollback_putchar(char c) {
 	if (c == 0) return;
-	if (MAX_LINE_LEN <= curr_column) add_new_line();
+	if (MAX_LINE_LEN <= curr_column) scrollback_new_line();
 	uint32_t line_width = margin_left + fb_measure_line_width(scrollbuffer[curr_line], curr_column) + fb_measure_char(c) + margin_right;
-	if (fb.width <= line_width) add_new_line();
+	if (fb.width <= line_width) scrollback_new_line();
 	scrollbuffer[curr_line][curr_column++] = c;
 }
 
@@ -256,7 +254,7 @@ bool move_right(uint8_t scancode) {
 
 static
 bool new_line(uint8_t scancode) {
-	add_new_line();
+	scrollback_new_line();
 	return true;
 }
 
@@ -267,8 +265,7 @@ bool delete_last(uint8_t scancode) {
 	return true;
 }
 
-static
-void draw_scrollbuffer(void) {
+void scrollback_draw(void) {
 	fb_clear(170, 69, 69);
 
 	uint32_t next_y;
@@ -318,10 +315,10 @@ void keyboard_process_scancode(uint8_t scancode) {
 	if (info.main_value == '\0') {
 		should_redraw = special_scancodes[info.special_value](scancode);
 	} else {
-		putchar(is_shift_pressed ? info.special_value : info.main_value);
+		scrollback_putchar(is_shift_pressed ? info.special_value : info.main_value);
 	}
 
 	if (should_redraw) {
-		draw_scrollbuffer();
+		scrollback_draw();
 	}
 }

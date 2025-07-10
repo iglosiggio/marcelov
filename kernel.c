@@ -125,6 +125,13 @@ long read_until(char delimiter, char* dst, long dst_size, long* written_size) {
 	}
 }
 
+void scrollback_print_line(const char* s) {
+	while (*s) {
+		scrollback_putchar(*s++);
+	}
+	scrollback_new_line();
+}
+
 int b;
 int c = 123;
 const int a_start;
@@ -197,6 +204,89 @@ int main() {
 	kmi_enable_mouse();
 
 	interrupts_enable();
+
+	scrollback_print_line("Hola! Esto es una prueba :)");
+	scrollback_print_line("");
+	scrollback_print_line("Los docentes de orga2 son:");
+	scrollback_print_line("  - agus");
+	scrollback_print_line("  - bruno");
+	scrollback_print_line("  - bruno");
+	scrollback_print_line("  - ed");
+	scrollback_print_line("  - eze");
+	scrollback_print_line("  - fd");
+	scrollback_print_line("  - furfi");
+	scrollback_print_line("  - gaspi");
+	scrollback_print_line("  - kevin");
+	scrollback_print_line("  - maca");
+	scrollback_print_line("  - marcos");
+	scrollback_print_line("  - mega");
+	scrollback_print_line("  - pache");
+	scrollback_print_line("  - stef");
+	scrollback_print_line("  - tincho");
+	scrollback_print_line("  - tomas");
+	scrollback_print_line(
+		"We're no strangers to love"
+		" / You know the rules and so do I (Do I)"
+		" / A full commitment's what I'm thinking of"
+		" / You wouldn't get this from any other guy"
+		" / I just wanna tell you how I'm feeling"
+		" / Gotta make you understand"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+		" / We've known each other for so long"
+		" / Your heart's been aching, but you're too shy to say it (To say it)"
+		" / Inside, we both know what's been going on (Going on)"
+		" / We know the game, and we're gonna play it"
+		" / And if you ask me how I'm feeling"
+		" / Don't tell me you're too blind to see"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+		" / Ooh (Give you up)"
+		" / Ooh-ooh (Give you up)"
+		" / Ooh-ooh"
+		" / Never gonna give, never gonna give (Give you up)"
+		" / Ooh-ooh"
+		" / Never gonna give, never gonna give (Give you up)"
+		" / We've known each other for so long"
+		" / Your heart's been aching, but you're too shy to say it (To say it)"
+		" / Inside, we both know what's been going on (Going on)"
+		" / We know the game, and we're gonna play it"
+		" / I just wanna tell you how I'm feeling"
+		" / Gotta make you understand"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+		" / Never gonna give you up"
+		" / Never gonna let you down"
+		" / Never gonna run around and desert you"
+		" / Never gonna make you cry"
+		" / Never gonna say goodbye"
+		" / Never gonna tell a lie and hurt you"
+	);
+	scrollback_draw();
 
 	while (1) asm volatile("");
 	return 0;
