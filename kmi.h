@@ -64,5 +64,6 @@ static volatile pl050_registers* const keyboard = (void*) 0x102000;
 static volatile pl050_registers* const mouse = (void*) 0x103000;
 
 void kmi_send(volatile pl050_registers* device, uint8_t command);
+void kmi_send_with_data(volatile pl050_registers* device, uint8_t command, uint8_t data);
 void kmi_enable_mouse();
 void kmi_enable_keyboard();

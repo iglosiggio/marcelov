@@ -1,12 +1,13 @@
 #include <stdint.h>
 
+#include "encoding.h"
 #include "fb.h"
+#include "interrupts.h"
+#include "keyboard.h"
+#include "kmi.h"
 #include "qemu.h"
 #include "sbi.h"
 #include "utils.h"
-#include "kmi.h"
-#include "interrupts.h"
-#include "encoding.h"
 
 void handle_keyboard(void) {
 	// QEMU makes data immediately available
@@ -17,6 +18,8 @@ void handle_keyboard(void) {
 		return;
 	}
 	print("Received "); print_sdec(data); print(" from the keyboard\n");
+
+	keyboard_process_scancode(data);
 }
 
 enum {
@@ -141,7 +144,7 @@ int main() {
 
 	struct sbiret dbcn_support = sbi_probe_extension(0x4442434E);
 
-	char qemu[5] = {};
+	char qemu[8] = {};
 	char qemu_cfg[9] = {};
 	fw_cfg_read_signature(qemu, qemu_cfg);
 	if (str_eq(qemu, "QEMU") && str_eq(qemu_cfg, "QEMU CFG")) {
@@ -194,25 +197,6 @@ int main() {
 	kmi_enable_mouse();
 
 	interrupts_enable();
-
-	int i = 0;
-	while (1) {
-		fb_fill_rect((rgb_t) { 69, 170, 69 }, 10, 10, 70, 150);
-		fb_print_dec(keyboard->cr,   10, 10);
-		fb_print_dec(keyboard->stat, 10, 20);
-		fb_print_dec(keyboard->data, 10, 30);
-		fb_print_dec(keyboard->clk,  10, 40);
-		fb_print_dec(keyboard->ir,   10, 50);
-
-		fb_print_dec(mouse->cr,   10,  70);
-		fb_print_dec(mouse->stat, 10,  80);
-		fb_print_dec(mouse->data, 10,  90);
-		fb_print_dec(mouse->clk,  10, 100);
-		fb_print_dec(mouse->ir,   10, 110);
-
-		fb_print_dec(i++,   10, 140);
-		for (int j = 0; j < 1<<24; j++) asm volatile("");
-	}
 
 	while (1) asm volatile("");
 	return 0;

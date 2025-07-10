@@ -96,8 +96,6 @@ void fb_fill_rect(rgb_t col, uint32_t x, uint32_t y, uint32_t width, uint32_t he
 #define CHAR_SIZE 32
 #define LAST_CHAR (FIRST_CHAR + sizeof(font) / CHAR_SIZE)
 
-
-static
 void fb_print_char(char c, uint32_t start_x, uint32_t start_y) {
 	rgb_t px = { .R = 0, .G = 0, .B = 0 };
 
@@ -125,6 +123,22 @@ void fb_print_char(char c, uint32_t start_x, uint32_t start_y) {
 			break;
 		}
 	}
+}
+
+uint32_t fb_measure_line_width(const char* str, uint64_t size) {
+	uint32_t res = 0;
+	while (*str && size--) {
+		res += CHAR_WIDTH(*str);
+	}
+	return res;
+}
+
+uint32_t fb_measure_line_height(const char* s, uint64_t size) {
+	return CHAR_HEIGHT;
+}
+
+uint32_t fb_measure_char(char c) {
+	return CHAR_WIDTH(c);
 }
 
 void fb_print(const char* str, uint32_t start_x, uint32_t start_y) {

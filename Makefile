@@ -24,7 +24,7 @@ run: kernel
 attach:
 	$(GDB) kernel -ex "target remote localhost:1234"
 
-kernel: start.o kernel.o sbi.o qemu.o fb.o virtio.o kmi.o interrupts.o
+kernel: start.o kernel.o sbi.o qemu.o fb.o virtio.o kmi.o interrupts.o keyboard.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 fb.o: fb.c fonts/$(FONT).inc
