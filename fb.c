@@ -128,7 +128,7 @@ void fb_print_char(char c, uint32_t start_x, uint32_t start_y) {
 uint32_t fb_measure_line_width(const char* str, uint64_t size) {
 	uint32_t res = 0;
 	while (*str && size--) {
-		res += CHAR_WIDTH(*str);
+		res += CHAR_WIDTH(*str++);
 	}
 	return res;
 }

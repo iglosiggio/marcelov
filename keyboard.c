@@ -11,17 +11,22 @@ constexpr uint64_t MOVE_UP_IDX = 3;
 constexpr uint64_t MOVE_LEFT_IDX = 4;
 constexpr uint64_t MOVE_RIGHT_IDX = 5;
 constexpr uint64_t NEW_LINE_IDX = 6;
+constexpr uint64_t DELETE_LAST_IDX = 7;
 
-static void unrecognized_scancode(uint8_t scancode);
-static void toggle_shift(uint8_t);
-static void move_down(uint8_t);
-static void move_up(uint8_t);
-static void move_left(uint8_t);
-static void move_right(uint8_t);
-static void new_line(uint8_t);
+// `true` -> the scrollbuffer changed
+// `false` -> the scrollbuffer remains the same
+
+static bool unrecognized_scancode(uint8_t scancode);
+static bool toggle_shift(uint8_t);
+static bool move_down(uint8_t);
+static bool move_up(uint8_t);
+static bool move_left(uint8_t);
+static bool move_right(uint8_t);
+static bool new_line(uint8_t);
+static bool delete_last(uint8_t);
 
 // Este es un array de punteros a funciones
-typedef void (*scancode_handler) (uint8_t scancode);
+typedef bool (*scancode_handler) (uint8_t scancode);
 static const scancode_handler special_scancodes[] = {
 	unrecognized_scancode,
 	toggle_shift,
@@ -29,7 +34,8 @@ static const scancode_handler special_scancodes[] = {
 	move_up,
 	move_left,
 	move_right,
-	new_line
+	new_line,
+	delete_last
 };
 
 struct scancode_info {
@@ -60,7 +66,7 @@ static const struct scancode_info scancode_defs[256] = {
 	[0x0b] = { '0', ')' },
 	[0x0c] = { '-', '_' },
 	[0x0d] = { '=', '+' },
-	[0x0e] = { '\0', MOVE_LEFT_IDX }, // Backspace
+	[0x0e] = { '\0', DELETE_LAST_IDX }, // Backspace
 
 	[0x0f] = { '\0', '\0' }, // Tab
 	[0x10] = { 'q', 'Q' },
@@ -159,9 +165,13 @@ static const struct scancode_info scancode_defs[256] = {
 };
 
 constexpr uint32_t MAX_LINE_LEN = 256;
-//constexpr uint32_t MAX_LINES_REMEMBERED = 1024;
-constexpr uint32_t MAX_LINES_REMEMBERED = 40;
+constexpr uint32_t MAX_LINES_REMEMBERED = 1024;
 char scrollbuffer[MAX_LINES_REMEMBERED][MAX_LINE_LEN + 1];
+
+constexpr uint32_t margin_left= 15;
+constexpr uint32_t margin_right = 15;
+constexpr uint32_t margin_top = 15;
+constexpr uint32_t margin_bottom = 15;
 
 static bool scrollbuffer_scrolls_on_new_line = false;
 static uint32_t scrollbuffer_top_line = 0;
@@ -200,80 +210,118 @@ void add_new_line(void) {
 	}
 }
 
-static void putchar(char c) {
+static
+void putchar(char c) {
+	if (c == 0) return;
 	if (MAX_LINE_LEN <= curr_column) add_new_line();
-	uint32_t width_at_this_line = fb_measure_line_width(scrollbuffer[curr_line], curr_column) + fb_measure_char(c);
-	print_sdec(width_at_this_line); print(" "); print_sdec(fb.width); print("\n");
-	if (fb.width <= width_at_this_line) add_new_line();
+	uint32_t line_width = margin_left + fb_measure_line_width(scrollbuffer[curr_line], curr_column) + fb_measure_char(c) + margin_right;
+	if (fb.width <= line_width) add_new_line();
 	scrollbuffer[curr_line][curr_column++] = c;
 }
 
-static void unrecognized_scancode(uint8_t scancode) {}
-
-static void toggle_shift(uint8_t scancode) {
-	is_shift_pressed = !is_shift_pressed;
+static
+bool unrecognized_scancode(uint8_t scancode) {
+	return false;
 }
 
-static void move_down(uint8_t scancode) {
+static
+bool toggle_shift(uint8_t scancode) {
+	is_shift_pressed = !is_shift_pressed;
+	return false;
+}
+
+static
+bool move_down(uint8_t scancode) {
 	scrollbuffer_scroll_down();
 	scrollbuffer_scrolls_on_new_line = false;
-}
-static void move_up(uint8_t scancode) {
-	scrollbuffer_scroll_up();
-	scrollbuffer_scrolls_on_new_line = false;
-}
-static void move_left(uint8_t scancode) {
-	//curr_column--;
-}
-static void move_right(uint8_t scancode) {
-	//curr_column++;
-}
-static void new_line(uint8_t scancode) {
-	add_new_line();
+	return true;
 }
 
+static
+bool move_up(uint8_t scancode) {
+	scrollbuffer_scroll_up();
+	scrollbuffer_scrolls_on_new_line = false;
+	return true;
+}
+
+static
+bool move_left(uint8_t scancode) {
+	return false;
+}
+
+static
+bool move_right(uint8_t scancode) {
+	return false;
+}
+
+static
+bool new_line(uint8_t scancode) {
+	add_new_line();
+	return true;
+}
+
+static
+bool delete_last(uint8_t scancode) {
+	if (curr_column == 0) return false;
+	scrollbuffer[curr_line][--curr_column] = 0;
+	return true;
+}
+
+static
 void draw_scrollbuffer(void) {
 	fb_clear(170, 69, 69);
 
-	uint32_t y = 0;
-	uint32_t x = 0;
+	uint32_t next_y;
+	uint32_t y = margin_top;
 	uint32_t line = scrollbuffer_top_line;
+	uint32_t last_line = -1;
 
 	while (1) {
-		for (int i = 0; i < MAX_LINE_LEN && x < fb.width; i++) {
+		uint32_t x = margin_left;
+		uint32_t next_y = y + fb_measure_line_height(scrollbuffer[line], MAX_LINE_LEN);
+
+		// If there's no vertical space available let's stop drawing here
+		if (fb.height <= next_y + margin_bottom) {
+			break;
+		}
+
+		// Draw the current line
+		for (int i = 0; i < MAX_LINE_LEN && x + margin_right < fb.width; i++) {
 			char c = scrollbuffer[line][i];
 			if (c == 0) break;
 
 			fb_print_char(c, x, y);
 			x += fb_measure_char(c);
 		}
+		last_line = line; // Mark the last line drawn
 
+		// Advance
 		y += fb_measure_line_height(scrollbuffer[line], MAX_LINE_LEN);
-		x = 0;
-
-		if (fb.height <= y) {
-			if (line == curr_line) {
-				scrollbuffer_scrolls_on_new_line = true;
-			}
-			break;
-		}
-
 		line = (line + 1) % MAX_LINES_REMEMBERED;
 
+		// Check if the next line is valid
 		if (line == scrollbuffer_start) {
 			break;
 		}
+	}
+
+	// If the last line drawn is the current scrollbuffer line then re-enable the sticky bit
+	if (last_line == curr_line) {
+		scrollbuffer_scrolls_on_new_line = true;
 	}
 }
 
 void keyboard_process_scancode(uint8_t scancode) {
 	struct scancode_info info = scancode_defs[scancode];
+	bool should_redraw = true;
 
 	if (info.main_value == '\0') {
-		special_scancodes[info.special_value](scancode);
+		should_redraw = special_scancodes[info.special_value](scancode);
 	} else {
 		putchar(is_shift_pressed ? info.special_value : info.main_value);
 	}
 
-	draw_scrollbuffer();
+	if (should_redraw) {
+		draw_scrollbuffer();
+	}
 }

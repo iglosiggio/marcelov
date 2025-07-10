@@ -17,9 +17,9 @@ void handle_keyboard(void) {
 		print("Received ACK from keyboard\n");
 		return;
 	}
-	print("Received "); print_sdec(data); print(" from the keyboard\n");
 
 	keyboard_process_scancode(data);
+	//print("Received "); print_sdec(data); print(" from the keyboard\n");
 }
 
 enum {
